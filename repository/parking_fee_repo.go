@@ -19,24 +19,8 @@ func NewParkingFeeRepositoryImpl(Db *gorm.DB) ParkingFeeRepository {
 	return &ParkingFeeRepositoryImpl{Db: Db}
 }
 
-func (d *ParkingFeeRepositoryImpl) Save(parkingFee model.ParkingFees) (int64, error) {
-	tx := d.Db.Begin()
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		}
-	}()
-
-	if err := tx.Error; err != nil {
-		return 0, err
-	}
-
+func (d *ParkingFeeRepositoryImpl) Save(tx *gorm.DB, parkingFee model.ParkingFees) (int64, error) {
 	if err := tx.Create(&parkingFee).Error; err != nil {
-		tx.Rollback()
-		return 0, err
-	}
-
-	if err := tx.Commit().Error; err != nil {
 		return 0, err
 	}
 
@@ -54,18 +38,7 @@ func (t *ParkingFeeRepositoryImpl) GetParkingFeeByID(id int64) (resp model.Parki
 	return parkingFee, nil
 }
 
-func (t *ParkingFeeRepositoryImpl) UpdateParkingFees(req model.ParkingFees) error {
-	tx := t.Db.Begin()
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		}
-	}()
-
-	if err := tx.Error; err != nil {
-		return err
-	}
-
+func (t *ParkingFeeRepositoryImpl) UpdateParkingFees(tx *gorm.DB, req model.ParkingFees) error {
 	// Prepare a map of columns to update
 	updates := map[string]interface{}{
 		"parking_end_time": req.ParkingEndTime,
@@ -74,11 +47,6 @@ func (t *ParkingFeeRepositoryImpl) UpdateParkingFees(req model.ParkingFees) erro
 
 	// Proceed with updating the status
 	if err := tx.Model(&model.ParkingFees{}).Where("id = ?", req.ID).Updates(updates).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	if err := tx.Commit().Error; err != nil {
 		return err
 	}
 

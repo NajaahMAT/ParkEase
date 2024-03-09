@@ -17,24 +17,9 @@ func NewParkingLotRepositoryImpl(Db *gorm.DB) ParkingLotRepository {
 	return &ParkingLotRepositoryImpl{Db: Db}
 }
 
-func (d *ParkingLotRepositoryImpl) Save(parkingLot model.ParkingLots) (int64, error) {
-	tx := d.Db.Begin()
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		}
-	}()
-
-	if err := tx.Error; err != nil {
-		return 0, err
-	}
-
+func (d *ParkingLotRepositoryImpl) Save(tx *gorm.DB, parkingLot model.ParkingLots) (int64, error) {
 	if err := tx.Create(&parkingLot).Error; err != nil {
 		tx.Rollback()
-		return 0, err
-	}
-
-	if err := tx.Commit().Error; err != nil {
 		return 0, err
 	}
 

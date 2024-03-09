@@ -9,6 +9,7 @@ import (
 	"time"
 
 	validator "github.com/go-playground/validator/v10"
+	"gorm.io/gorm"
 )
 
 type ParkingServiceImpl struct {
@@ -16,15 +17,17 @@ type ParkingServiceImpl struct {
 	ParkSlotRepository repository.ParkingSlotRepository
 	ParkFeeRepository  repository.ParkingFeeRepository
 	Validate           *validator.Validate
+	Db                 *gorm.DB // Add Db field
 }
 
-func NewParkingServiceImpl(parkLotRepository repository.ParkingLotRepository,
+func NewParkingServiceImpl(db *gorm.DB, parkLotRepository repository.ParkingLotRepository,
 	parkSlotRepository repository.ParkingSlotRepository, parkFeeRepository repository.ParkingFeeRepository, validate *validator.Validate) ParkingService {
 	return &ParkingServiceImpl{
 		ParkLotRepository:  parkLotRepository,
 		ParkSlotRepository: parkSlotRepository,
 		ParkFeeRepository:  parkFeeRepository,
 		Validate:           validate,
+		Db:                 db, // Assign the Db instance
 	}
 }
 
@@ -34,14 +37,23 @@ func (t *ParkingServiceImpl) Create(req request.CreateParkingLotRequest) (lotID 
 		return
 	}
 
+	// Start a transaction
+	tx := t.Db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
 	// Create new parking lot entry
 	lotModel := model.ParkingLots{
 		Name:       req.Name,
 		TotalSlots: req.TotalSlots,
 	}
 
-	lotID, err = t.ParkLotRepository.Save(lotModel)
+	lotID, err = t.ParkLotRepository.Save(tx, lotModel)
 	if err != nil {
+		tx.Rollback()
 		return 0, err
 	}
 
@@ -52,10 +64,16 @@ func (t *ParkingServiceImpl) Create(req request.CreateParkingLotRequest) (lotID 
 			SlotNo:        i,
 			InMaintenance: false, // Assuming slots are not in maintenance initially
 		}
-		_, err := t.ParkSlotRepository.Save(slot)
+		_, err := t.ParkSlotRepository.Save(tx, slot)
 		if err != nil {
+			tx.Rollback()
 			return 0, err
 		}
+	}
+
+	// Commit the transaction
+	if err := tx.Commit().Error; err != nil {
+		return 0, err
 	}
 
 	return lotID, nil
@@ -90,6 +108,14 @@ func (t *ParkingServiceImpl) ParkVehicle(req request.ParkVehicleRequest) (feeID 
 		return 0, err
 	}
 
+	// Start a transaction
+	tx := t.Db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
 	// Create new parking vehicle entry in the parking fee table
 	parkFeeModel := model.ParkingFees{
 		SlotID:           req.SlotID,
@@ -97,16 +123,22 @@ func (t *ParkingServiceImpl) ParkVehicle(req request.ParkVehicleRequest) (feeID 
 		ParkingStartTime: time.Now(),
 		//ParkingEndTime:   time.Now().Add(time.Hour), //By Default Parking End Time is calculated as 1 hour from start time, but it will be recalculated while unparking.
 	}
-	feeID, err = t.ParkFeeRepository.Save(parkFeeModel)
+	feeID, err = t.ParkFeeRepository.Save(tx, parkFeeModel)
 	if err != nil {
+		tx.Rollback()
 		return 0, err
 	}
 
 	req.IsSlotAvailable = false //to make sure the park slot availability status false
 
 	// update the slot available status to false in parking slots table
-	err = t.ParkSlotRepository.UpdateSlotAvailableStatus(req)
+	err = t.ParkSlotRepository.UpdateSlotAvailableStatus(tx, req)
 	if err != nil {
+		tx.Rollback()
+		return 0, err
+	}
+	// Commit the transaction
+	if err := tx.Commit().Error; err != nil {
 		return 0, err
 	}
 
@@ -129,8 +161,17 @@ func (t *ParkingServiceImpl) UnParkVehicle(id int64) (resp response.UnParkVehicl
 	parkingData.ParkingEndTime = current
 	parkingData.ParkingFee = float64(parkingFee)
 
-	err = t.ParkFeeRepository.UpdateParkingFees(parkingData)
+	// Start a transaction
+	tx := t.Db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	err = t.ParkFeeRepository.UpdateParkingFees(tx, parkingData)
 	if err != nil {
+		tx.Rollback()
 		return resp, err
 	}
 
@@ -140,8 +181,14 @@ func (t *ParkingServiceImpl) UnParkVehicle(id int64) (resp response.UnParkVehicl
 		IsSlotAvailable: true,
 	}
 	// update the slot available status to true in parking slots table
-	err = t.ParkSlotRepository.UpdateSlotAvailableStatus(parkSlotReq)
+	err = t.ParkSlotRepository.UpdateSlotAvailableStatus(tx, parkSlotReq)
 	if err != nil {
+		tx.Rollback()
+		return resp, err
+	}
+
+	// Commit the transaction
+	if err := tx.Commit().Error; err != nil {
 		return resp, err
 	}
 

@@ -16,24 +16,8 @@ func NewParkingSlotRepositoryImpl(Db *gorm.DB) ParkingSlotRepository {
 	return &ParkingSlotRepositoryImpl{Db: Db}
 }
 
-func (d *ParkingSlotRepositoryImpl) Save(parkingSlot model.ParkingSlots) (int64, error) {
-	tx := d.Db.Begin()
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		}
-	}()
-
-	if err := tx.Error; err != nil {
-		return 0, err
-	}
-
+func (d *ParkingSlotRepositoryImpl) Save(tx *gorm.DB, parkingSlot model.ParkingSlots) (int64, error) {
 	if err := tx.Create(&parkingSlot).Error; err != nil {
-		tx.Rollback()
-		return 0, err
-	}
-
-	if err := tx.Commit().Error; err != nil {
 		return 0, err
 	}
 
@@ -48,43 +32,17 @@ func (d *ParkingSlotRepositoryImpl) GetAvailableSlotsByLot() ([]model.ParkingSlo
 	return parkingSlots, nil
 }
 
-func (t *ParkingSlotRepositoryImpl) UpdateSlotAvailableStatus(req request.ParkVehicleRequest) error {
-	tx := t.Db.Begin()
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		}
-	}()
-
-	if err := tx.Error; err != nil {
-		return err
-	}
-
+func (t *ParkingSlotRepositoryImpl) UpdateSlotAvailableStatus(tx *gorm.DB, req request.ParkVehicleRequest) error {
 	// Proceed with updating the status
 	if err := tx.Model(&model.ParkingSlots{}).Where("slot_id = ? ", req.SlotID).Update("is_available", req.IsSlotAvailable).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
 
-	if err := tx.Commit().Error; err != nil {
-		return err
-	}
-
 	return nil
 }
 
-func (t *ParkingSlotRepositoryImpl) UpdateInMaintenanceStatus(req request.SlotMaintenanceRequest) error {
-	tx := t.Db.Begin()
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		}
-	}()
-
-	if err := tx.Error; err != nil {
-		return err
-	}
-
+func (t *ParkingSlotRepositoryImpl) UpdateInMaintenanceStatus(tx *gorm.DB, req request.SlotMaintenanceRequest) error {
 	// Prepare a map of columns to update
 	updates := map[string]interface{}{
 		"in_maintenance": req.InMaintenance,
@@ -93,11 +51,6 @@ func (t *ParkingSlotRepositoryImpl) UpdateInMaintenanceStatus(req request.SlotMa
 
 	// Proceed with updating the maintenance status
 	if err := tx.Model(&model.ParkingSlots{}).Where("slot_id = ?", req.SlotID).Updates(updates).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	if err := tx.Commit().Error; err != nil {
 		return err
 	}
 

@@ -3,9 +3,11 @@ package repository
 import (
 	"ParkEase/data/response"
 	"ParkEase/model"
+
+	"gorm.io/gorm"
 )
 
 type ParkingLotRepository interface {
-	Save(parkingLot model.ParkingLots) (int64, error)
+	Save(tx *gorm.DB, parkingLot model.ParkingLots) (int64, error)
 	GetParkingLotStatus() ([]response.ParkingLotStatusResponse, error)
 }

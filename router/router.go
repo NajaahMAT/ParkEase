@@ -31,12 +31,12 @@ func InitializeDependencies() *Dependencies {
 	parkingLotRepository := repository.NewParkingLotRepositoryImpl(db)
 	parkingSlotRepository := repository.NewParkingSlotRepositoryImpl(db)
 	parkingFeeRepository := repository.NewParkingFeeRepositoryImpl(db)
-	parkingService := service.NewParkingServiceImpl(parkingLotRepository, parkingSlotRepository, parkingFeeRepository, validate)
+	parkingService := service.NewParkingServiceImpl(db, parkingLotRepository, parkingSlotRepository, parkingFeeRepository, validate)
 	parkingController := controller.NewParkingController(parkingService)
 
 	//Setup for Maintenance
 	parkingSlotMaintenanceRepository := repository.NewParkingSlotMaintenanceRepositoryImpl(db)
-	maintenanceService := service.NewMaintenanceServiceImpl(parkingSlotRepository, parkingSlotMaintenanceRepository, validate)
+	maintenanceService := service.NewMaintenanceServiceImpl(db, parkingSlotRepository, parkingSlotMaintenanceRepository, validate)
 	maintenanceController := controller.NewMaintenanceController(maintenanceService)
 
 	return &Dependencies{
