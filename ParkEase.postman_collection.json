@@ -1,0 +1,223 @@
+{
+	"info": {
+		"_postman_id": "d1a68b56-6565-4da3-90ee-40fd0047b57b",
+		"name": "ParkEase",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "3689082"
+	},
+	"item": [
+		{
+			"name": "Create Parking Slot",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"Lot A\",\r\n    \"total_slots\": 10\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8081/api/parking_lots",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"api",
+						"parking_lots"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Park Vehicle",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"slot_id\": 3,\r\n    \"vehicle_number\": \"EP1845\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8081/api/park",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"api",
+						"park"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "UnPark Vehicle",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8081/api/unpark/3",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"api",
+						"unpark",
+						"3"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Available Parking Slots By Lots",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8081/api/parking/lots/slots",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"api",
+						"parking",
+						"lots",
+						"slots"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Parking  Lots Status",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8081/api/parking/lots/status",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"api",
+						"parking",
+						"lots",
+						"status"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Parking Statistics",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8081/api/parking/stats?date=2024-03-09",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"api",
+						"parking",
+						"stats"
+					],
+					"query": [
+						{
+							"key": "date",
+							"value": "2024-03-09"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Put Slots In Maintenance",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"slot_id\": 5,\r\n    \"reason\": \"test\",\r\n    \"in_maintenance\": true\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8081/api/parking/slot/maintenance",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"api",
+						"parking",
+						"slot",
+						"maintenance"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Restore Slots From Maintenance",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"slot_id\": 3,\r\n    \"reason\": \"\",\r\n    \"in_maintenance\": false\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8081/api/parking/slot/restore/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"api",
+						"parking",
+						"slot",
+						"restore",
+						"1"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
