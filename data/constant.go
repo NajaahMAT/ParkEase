@@ -1,0 +1,6 @@
+package data
+
+const (
+	PARKING_RATE_PER_HOUR = 10.0
+	DEFAULT_PARK_END_TIME = "9999-12-31 23:59:59"
+)
