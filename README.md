@@ -38,3 +38,44 @@ The Tables , Relationships and Key constraints are created through AutoMigration
 2. To Store Park Slots Data: `parking_slots`
 3. To Store Parking Fee Calculation Related Data: `parking_fees`
 4. To store Parking Slot Maintenance Data: `parking_slot_maintenances`
+
+| Table Name             | Column Name       | Data Type     | Constraints                                     | Description                                      |
+|------------------------|-------------------|---------------|-------------------------------------------------|--------------------------------------------------|
+| parking_fees           | ID                | int64         | primary_key, auto_increment                     | Unique identifier for the ParkingFee            |
+|                        | SlotID            | int64         | not null                                        | Parking slot identifier                         |
+|                        | VehicleNumber     | varchar(50)   | type:varchar(50), not null                      | Vehicle number parked                           |
+|                        | ParkingStartTime  | time.Time     | not null                                        | Start time of parking                           |
+|                        | ParkingEndTime    | time.Time     | default:9999-12-31 23:59:59                    | End time of parking (default: 31 Dec 9999)      |
+|                        | ParkingFee        | decimal(10,6) | type:decimal(10,6)                              | Parking fee                                     |
+| parking_lots           | LotID             | int64         | primary_key, auto_increment, comment:Unique identifier for the ParkingLot | Unique identifier for the ParkingLot |
+|                        | Name              | varchar(50)   | type:varchar(50), not null, comment:Name of the Parking Lot | Name of the Parking Lot                    |
+|                        | TotalSlots        | int           | type:int, not null, comment:Total slots in the parking lot | Total slots in the parking lot              |
+|                        | CreatedDate       | time.Time     | autoCreateTime                                 | Automatically generated creation timestamp   |
+|                        | UpdatedDate       | time.Time     | autoUpdateTime                                 | Automatically generated update timestamp     |
+| parking_slot_maintenances | MaintenanceID   | int64         | primary_key, auto_increment, comment:Unique identifier for the Parking Slot Maintenance | Unique identifier for the Parking Slot Maintenance |
+|                            | SlotID         | int64         | not null, comment:Parking LotID               | Parking slot identifier                       |
+|                            | MaintenanceStart | time.Time   | not null                                      | Start time of maintenance                     |
+|                            | MaintenanceEnd   | time.Time   | default:9999-12-31 23:59:59                  | End time of maintenance (default: 31 Dec 9999) |
+|                            | Reason          | varchar(200) | type:varchar(200), not null                   | Reason for maintenance                         |
+| parking_slots          | SlotID            | int64         | primary_key, auto_increment, comment:Unique identifier for the Parking Slot | Unique identifier for the Parking Slot   |
+|                        | LotID             | int64         | type:int, not null, comment:Parking LotID      | Parking lot identifier                        |
+|                        | SlotNo            | int           | type:int, not null                             | Parking slot number                           |
+|                        | InMaintenance     | boolean       | type:boolean, default:false                    | Maintenance status of the slot                |
+|                        | IsAvailable       | boolean       | type:boolean, default:true                     | Availability status of the slot               |
+|                        | CreatedDate       | time.Time     | autoCreateTime                                 | Automatically generated creation timestamp   |
+|                        | UpdatedDate       | time.Time     | autoUpdateTime                                 | Automatically generated update timestamp     |
+
+
+### Api Details.
+
+| API Name                  | Description                                             | HTTP Method | Request Struct                 | Response Struct               |
+|---------------------------|---------------------------------------------------------|-------------|--------------------------------|-------------------------------|
+| Create Parking Lot        | Create a new parking lot with a given name and slots   | POST        | { "name": string, "total_slots": int } | { "code": int, "status": string, "data": { "lot_id": int } } |
+| Get Available Parking Slots By Lots | Retrieve available parking slots grouped by lots    | GET         | None                           | { "lots": [ { "lot_id": int, "slots": [int] } ] } |
+| Park Vehicle              | Park a vehicle in a specific parking slot              | POST        | { "slot_id": int, "vehicle_number": string } | { "code": int, "status": string, "data": { "parking_fee_id": int } } |
+| Unpark Vehicle            | Unpark a vehicle from a specific parking slot         | PUT         | None                           | { "code": int, "status": string, "data": { "bill_info": { "bill_id": int, "vehicle_no": string, "parking_start": string, "parking_end": string, "parking_fee": float64 } } } |
+| Get Parking Lots Status  | Retrieve the status of parking slots in a parking lot | GET         | None                           | { "code": int, "status": string, "data": { "LotStatus": [ { "lot_id": int, "lot_name": string, "slot_id": int, "slot_number": int, "is_available": bool, "in_maintenance": bool } ] } } |
+| Put Slots In Maintenance | Put parking slots into maintenance mode                | POST        | { "slot_id": int, "reason": string, "in_maintenance": bool } | { "code": int, "status": string, "data": { "maintenance_id": int } } |
+| Restore Slots From Maintenance | Restore parking slots from maintenance mode       | PUT         | { "slot_id": int, "reason": string, "in_maintenance": bool } | { "code": int, "status": string } |
+| Get Parking Statistics   | Retrieve parking statistics for a given date          | GET         | None                           | { "code": int, "status": string, "data": { "totalVehicles": int, "totalParkingTime": int, "totalParkingFee": float64 } } |
+
