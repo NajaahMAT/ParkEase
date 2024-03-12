@@ -31,6 +31,7 @@ func NewParkingServiceImpl(db *gorm.DB, parkLotRepository repository.ParkingLotR
 	}
 }
 
+// This function is  for creating a new parking lot.
 func (t *ParkingServiceImpl) Create(req request.CreateParkingLotRequest) (lotID int64, err error) {
 	err = t.Validate.Struct(req)
 	if err != nil {
@@ -201,17 +202,6 @@ func (t *ParkingServiceImpl) UnParkVehicle(id int64) (resp response.UnParkVehicl
 	return resp, nil
 }
 
-func calculateParkingFee(parkedAt time.Time, parkedEnd time.Time) int {
-	duration := parkedEnd.Sub(parkedAt)
-	hours := int(math.Ceil(duration.Hours())) //even if the duration is less than an hour, it will be rounded up to one hour. For example, if a vehicle is parked for 1 hour and 5 minutes, it will be considered as 2 hours
-	if hours == 0 {
-		hours = 1 // Minimum parking fee is for one hour
-	}
-
-	return hours * 10
-
-}
-
 func (t *ParkingServiceImpl) GetParkingLotStatus() (resp []response.ParkingLotStatusResponse, err error) {
 
 	parkinglotStatus, err := t.ParkLotRepository.GetParkingLotStatus()
@@ -230,4 +220,15 @@ func (t *ParkingServiceImpl) GetParkingStats(date time.Time) (resp response.Park
 	}
 
 	return parkingStats, nil
+}
+
+func calculateParkingFee(parkedAt time.Time, parkedEnd time.Time) int {
+	duration := parkedEnd.Sub(parkedAt)
+	hours := int(math.Ceil(duration.Hours())) //even if the duration is less than an hour, it will be rounded up to one hour. For example, if a vehicle is parked for 1 hour and 5 minutes, it will be considered as 2 hours
+	if hours == 0 {
+		hours = 1 // Minimum parking fee is for one hour
+	}
+
+	return hours * 10
+
 }

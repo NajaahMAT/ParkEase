@@ -35,7 +35,6 @@ func (d *ParkingSlotRepositoryImpl) GetAvailableSlotsByLot() ([]model.ParkingSlo
 func (t *ParkingSlotRepositoryImpl) UpdateSlotAvailableStatus(tx *gorm.DB, req request.ParkVehicleRequest) error {
 	// Proceed with updating the status
 	if err := tx.Model(&model.ParkingSlots{}).Where("slot_id = ? ", req.SlotID).Update("is_available", req.IsSlotAvailable).Error; err != nil {
-		tx.Rollback()
 		return err
 	}
 
