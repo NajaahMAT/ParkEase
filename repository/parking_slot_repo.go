@@ -3,6 +3,7 @@ package repository
 import (
 	"ParkEase/data/request"
 	"ParkEase/model"
+	"fmt"
 	"time"
 
 	"gorm.io/gorm"
@@ -33,8 +34,9 @@ func (d *ParkingSlotRepositoryImpl) GetAvailableSlotsByLot() ([]model.ParkingSlo
 }
 
 func (t *ParkingSlotRepositoryImpl) UpdateSlotAvailableStatus(tx *gorm.DB, req request.ParkVehicleRequest) error {
+	fmt.Println(req.IsSlotAvailable)
 	// Proceed with updating the status
-	if err := tx.Model(&model.ParkingSlots{}).Where("slot_id = ? ", req.SlotID).Update("is_available", req.IsSlotAvailable).Error; err != nil {
+	if err := tx.Model(&model.ParkingSlots{}).Where("slot_id = ? ", req.SlotID).Update("is_available", false).Error; err != nil {
 		return err
 	}
 
@@ -54,4 +56,21 @@ func (t *ParkingSlotRepositoryImpl) UpdateInMaintenanceStatus(tx *gorm.DB, req r
 	}
 
 	return nil
+}
+
+func (d *ParkingSlotRepositoryImpl) GetAvailableSlotsByCreteria(isSlotOdd bool) (*model.ParkingSlots, error) {
+	var parkingSlots model.ParkingSlots
+	var query *gorm.DB
+
+	if isSlotOdd {
+		query = d.Db.Where("is_available = ? AND in_maintenance = ? AND slot_no %2 != 0", true, false)
+	} else {
+		query = d.Db.Where("is_available = ? AND in_maintenance = ? AND slot_no %2 = 0", true, false)
+	}
+
+	if err := query.Order("lot_id, slot_no").Limit(1).Find(&parkingSlots).Error; err != nil {
+		return nil, err
+	}
+
+	return &parkingSlots, nil
 }

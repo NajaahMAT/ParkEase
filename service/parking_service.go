@@ -6,6 +6,7 @@ import (
 	"ParkEase/model"
 	"ParkEase/repository"
 	"math"
+	"strconv"
 	"time"
 
 	validator "github.com/go-playground/validator/v10"
@@ -117,9 +118,24 @@ func (t *ParkingServiceImpl) ParkVehicle(req request.ParkVehicleRequest) (feeID 
 		}
 	}()
 
+	var isSlotOdd bool
+	vehicleNo, _ := strconv.Atoi(req.VehicleNumber)
+
+	if vehicleNo%2 == 0 {
+		isSlotOdd = false
+	} else {
+		isSlotOdd = true
+	}
+
+	//Find available slot based on odd/even criteria
+	slot, err := t.ParkSlotRepository.GetAvailableSlotsByCreteria(isSlotOdd)
+	if err != nil {
+		return 0, err
+	}
+
 	// Create new parking vehicle entry in the parking fee table
 	parkFeeModel := model.ParkingFees{
-		SlotID:           req.SlotID,
+		SlotID:           slot.SlotID,
 		VehicleNumber:    req.VehicleNumber,
 		ParkingStartTime: time.Now(),
 		//ParkingEndTime:   time.Now().Add(time.Hour), //By Default Parking End Time is calculated as 1 hour from start time, but it will be recalculated while unparking.
@@ -131,7 +147,7 @@ func (t *ParkingServiceImpl) ParkVehicle(req request.ParkVehicleRequest) (feeID 
 	}
 
 	req.IsSlotAvailable = false //to make sure the park slot availability status false
-
+	req.SlotID = slot.SlotID
 	// update the slot available status to false in parking slots table
 	err = t.ParkSlotRepository.UpdateSlotAvailableStatus(tx, req)
 	if err != nil {
@@ -230,5 +246,4 @@ func calculateParkingFee(parkedAt time.Time, parkedEnd time.Time) int {
 	}
 
 	return hours * 10
-
 }

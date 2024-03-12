@@ -85,7 +85,7 @@ func (d *ParkingFeeRepositoryImpl) GetParkingStats(date time.Time) (resp respons
 		totalFee += fee
 	}
 
-	parkingStats.TotalParkingTime = totalDuration / time.Second // Convert to seconds
+	parkingStats.TotalParkingTime = totalDuration / time.Minute // Convert to seconds
 	parkingStats.TotalParkingFee = totalFee
 
 	return parkingStats, nil
