@@ -33,7 +33,7 @@ func (d *ParkingLotRepositoryImpl) GetParkingLotStatus() (resp []response.Parkin
 					FROM parking_lots pl
 					JOIN parking_slots ps ON pl.lot_id = ps.lot_id
 					LEFT JOIN parking_fees pf ON ps.slot_id = pf.slot_id
-					WHERE pf.parking_end_time = ? OR pf.parking_end_time IS NULL 					      
+					WHERE pf.parking_end_time = ?  					      
 				`, data.DEFAULT_PARK_END_TIME).Rows()
 
 	if err != nil {
